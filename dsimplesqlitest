@@ -1,0 +1,106 @@
+#!/usr/bin/python3
+#
+# CODE BY MATHYSCIS
+# Telegram: @Mathysics
+#
+try:                                                               # Import dos modulos usados
+    import requests, sys, argparse, os, random, re, urllib.parse   # junto com try para verificar 
+    from bs4 import BeautifulSoup                                  # se à dependencias de modulos,
+except Exception as err:                                           # caso houve ele avisa e instala 
+    print("[*]",err,"\n[!] Installing missing archives...")        # os mesmos.
+    os.system("pip install requests bs4")
+
+def buscar(dork): #Função pque faz o google hacking e retorna uma lista com sites a serem analisados
+    query = "https://www.google.com/search?client=firefox-b-e&q="+dork #monta a query do google
+    html_doc = requests.get(query) #faz a requisição GET 
+    soup = BeautifulSoup(html_doc.content, 'html.parser') #parsing da pagina 
+    urls_encontradas = [] #cria lista vazia para armazenar os sites encontrados pelo google usando a dork
+    for i in soup.find_all('a'):                               # Procura todas linhas com a tag "a"
+        if "/url?q=" in i.get('href'):                         # busca todas tags "a" que tenha a tag "href"
+            urlparse = urllib.parse.unquote(i.get('href')[7:]) # parsing e limpeza das
+            urlparse = re.sub("&sa=.*","",urlparse)            # urls e logo
+            urls_encontradas.append(urlparse)                  #  armazena na lista
+    return urls_encontradas                                    # retorna lista com as urls encontradas
+
+def getua(): # função que retorna randomicamente um User-Agent dentro da lista "ua" 
+    ua = ["Mozilla/5.0 (Windows NT 6.4; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2225.0 Safari/537.36","Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2225.0 Safari/537.36","Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2224.3 Safari/537.36","Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0","Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20130401 Firefox/31.0","Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:28.0) Gecko/20100101 Firefox/31.0","Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0","Mozilla/5.0 (X11; U; Linux i686; pl-PL; rv:1.9.0.6) Gecko/2009020911","Mozilla/5.0 (X11; U; Linux i686; en; rv:1.9.0.6) Gecko/20080528","Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.6) Gecko/2009020409","Mozilla/5.0 (Windows NT 6.4; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2225.0 Safari/537.36","Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2225.0 Safari/537.36","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1664.3 Safari/537.36","Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1664.3 Safari/537.36","Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.8.1) Gecko/20060918 Firefox/2.0b2","Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.8.1) Gecko/20060916 Firefox/2.0b2","Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.12) Gecko/20080208 Firefox/2.0b2","Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1b2) Gecko/20060821 Firefox/2.0b2","Mozilla/5.0 (Windows; U; Windows NT 5.1; pl; rv:1.8.1.1) Gecko/20061204 Mozilla/5.0 (X11; U; Linux i686; fr; rv:1.8.1) Gecko/20060918 Firefox/2.0b2","Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1b2) Gecko/20060821 Firefox/2.0b2","Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1b2) Gecko/20060821 Firefox/2.0b2","Mozilla/5.0 (BeOS; U; BeOS BePC; en-US; rv:1.8.1b2) Gecko/20060901 Firefox/2.0b2"]
+    return random.choice(ua)
+
+def simplesqli(alvos): #função simples de analise de site com possiveis vulns sql-injection
+    vuln = [] #instancia lista "vuln" para armazenas sites vulneraveis
+    for url in alvos:
+        erros = ["mysql_fetch_array()", "You have an error in your SQL syntax;"] #erros para encontrar no site
+        headers = requests.utils.default_headers() #criação de headers da requisição
+        headers.update({'User-Agent':getua()})     #chama função "getua" para gerar um User-Agent
+        urla = url+'%27' #monta url com uma "'" para forçar um possivel erro
+        try:
+            html_doc = requests.get(urla, headers=headers) #faz a requisição e armazena o resultado em "html_doc"
+        except Exception as err:
+            print("\n[Error to connect]",url)
+        soup = BeautifulSoup(html_doc.content, 'html.parser') #parsing da pagina
+        for erro in erros: #roda a lista com erros comuns
+            if re.search(erro, soup.decode(), re.IGNORECASE): #verifica se a pagina deu erro
+                vuln.append(url) #armazena o possivel site vulneravel numa lista 
+    return vuln #retorna uma lista com todos possiveis sites vulneraveis
+
+def salvar(op): #Função para salvar o resultado em um arquivo especificado pelo "-o"
+    if op:
+        outfile = open(arguments.output, "w")
+        for linha in op:
+            outfile.writelines(linha+"\n")
+        outfile.close()
+        print("\n\t[!] Output file saved in {}".format(arguments.output))
+    return 0
+
+def banner():
+    print("""
+      (                                 _
+   )                               /=>
+  (  +______________________/\/\___ / /|
+   .''._______________'._____      / /|/\\
+  : () :DSIMPLESQLITEST:\ ----\|    \ )
+   '..'________________.'0|----|      \\
+                    0_0/____/        \\
+                        |----    /----\\
+                       || -\\ --|       \\
+                       ||   || ||\      \\
+                        \\____// '|       \\
+Coded by: Mathysics             .'/       |
+Telegram: @Mathysics           .:/        |
+                               :/_________|
+                                           
+    """)
+
+if __name__ == "__main__":        #Configuraçoes gerais do argparse
+    parser = argparse.ArgumentParser(description = 'Auto google hacking and test a simple SQL-Injection',prog="dsimplesqlitest") #Descrição do software
+    parser.add_argument('dork',help = 'Select dork file.') #add o arg "dork"
+    parser.add_argument('-o',"--output", action = 'store', dest = 'output', required = False, #add arg "output"
+                           help = 'result file output')
+    banner()
+    arguments = parser.parse_args()
+    try:                                                 # Tenta abrir o arquivo passado pela arg "dork" 
+        filedork = open(arguments.dork, "r").readlines() # em modo leitura ("r","read") e armazena em "filedork".
+    except FileNotFoundError as err:                     # -------------------------------------------
+        print(err)                                       # exceção de erro de arquivo não encontrado,
+        sys.exit()                                       # Se não encontrado, mostra o erro e fecha.
+    
+    alvos = {} #cria dicionario para armazenar os alvos futuramente.
+
+    for dork in filedork:           # Roda a lista de dorks para que envia uma a uma para a função "buscar()". 
+        dork = re.sub("\n","", dork) #retira quebra de linha da dork
+        result = buscar(dork)   # armazena uma lista com o resultado da função em "result".
+        alvos[dork] = result    # insere o resultado separadamente por dork em dicionario para melhor organização
+    op = [] #Cria lista vazia para ser usada caso o usuario queira salvar o resultado em um arquivo
+    for c in alvos:                     # Roda o dicionario "alvos" de listas de alvos a serem analisados
+        vuln = simplesqli(alvos[c])     # pela func "simplesqli()". Armazena na lista "vuln" os sites
+
+        if vuln:                        # vulneraveis.
+            print("\n\t[!] Vulns to dork:",c,"\n")
+            for v in vuln:              # checa se tem sites na lista e caso tenha, mostra na tela
+                print("[VULNERABLE]",v) # os mesmos, caso não tenha nennhum vulneravel , mostra tmb e foda-se
+                if arguments.output:
+                    op.append(v)
+        else:                           #
+            print("\n\tNot vulns to dork:",c)#
+    salvar(op)
+    print("\n\t\t***FINISH***")
