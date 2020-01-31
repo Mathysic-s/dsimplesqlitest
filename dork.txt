@@ -1,0 +1,9 @@
+view_items.php?id=
+productlist.php?fid=
+products.php?cat=
+productlist.php?fid=
+products.php?cat=
+more_detail.php?id=
+content.php?id=
+view_items.php?id=
+view_author.php?id=
