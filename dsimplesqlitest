@@ -4,7 +4,7 @@
 # Telegram: @Mathysics
 #
 try:                                                               # Import dos modulos usados
-    import requests, sys, argparse, os, random, re, urllib.parse   # junto com try para verificar 
+    import sys, argparse, os, random, re, requests, urllib.parse   # junto com try para verificar 
     from bs4 import BeautifulSoup                                  # se à dependencias de modulos,
 except Exception as err:                                           # caso houve ele avisa e instala 
     print("[*]",err,"\n[!] Installing missing archives...")        # os mesmos.
